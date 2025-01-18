@@ -8,8 +8,10 @@ class EnglishRooms:
 
     def __init__(self, path):
         self.path = path
-        self.__pd = pd.read_excel('english.xlsx', header=1, sheet_name=None)
+        self.__pd = pd.read_excel(path, header=1, sheet_name=None)
         self.__fix()
+
+        self.get_json()
 
     # fix list def
     @staticmethod
@@ -78,6 +80,7 @@ class EnglishRooms:
             for index, item in enumerate(dict['hour']):
                 self.result[key_name][item] = {'teacher': dict['teacher'][index], 'room': dict['room'][index], }
 
-    def print_json(self):
-        with open("english.json", "w", encoding='utf-8') as file:
+    def get_json(self):
+        with open("jsons/english.json", "w", encoding='utf-8') as file:
             json.dump(self.result, file, ensure_ascii=False, indent=4)
+
