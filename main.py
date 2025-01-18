@@ -6,15 +6,14 @@ from EnglishRooms import EnglishRooms
 def get_group(soup):
     return soup.find('h1').text.split()[2]
 
-def update_result(day, hour, my_group, subject, teacher, room, group, skip_vubirkovi = True):
-
+def update_result(classes, day, hour, my_group, subject, teacher, room, group, skip_vubirkovi = True):
     if subject and teacher and room:
         if 'Вибіркові дисципліни' not in subject.text and skip_vubirkovi:
 
             subject = subject.text
             teacher = teacher.text
             room = ' '.join(room.text.split())
-
+            classes = classes.text.split()[0][0:-5] if classes.text.split()[0][0:-5] == 'Практика' or classes.text.split()[0][0:-5] == 'Лекція' else 'Практика'
 
             if group:
                 group = group.text
@@ -29,10 +28,10 @@ def update_result(day, hour, my_group, subject, teacher, room, group, skip_vubir
 
             if not hour in result[day]:
                 # print(f'if {result}')
-                result[day].update({hour: [{'subject': subject, 'teacher': teacher, 'room': room, 'group': group}]})
+                result[day].update({hour: [{'subject': subject, 'teacher': teacher, 'room': room, 'group': group, 'classes': classes}]})
             else:
                 # print(f'else {result}')
-                result[day][hour].append({'subject': subject, 'teacher': teacher, 'room': room, 'group': group})
+                result[day][hour].append({'subject': subject, 'teacher': teacher, 'room': room, 'group': group, 'classes': classes})
 
 
 
@@ -42,9 +41,9 @@ print(englishRooms)
 ipz235 = 'https://rozklad.ztu.edu.ua/schedule/group/ІПЗ-23-5'
 vt242 = 'https://rozklad.ztu.edu.ua/schedule/group/ВТ-24-2'
 
-englishTeacher = 'Вергун Тетяна Михайлівна'
+englishTeacher = 'Полянська Анна Станіславівна'
 
-response = requests.get(ipz235)
+response = requests.get(vt242)
 
 if response.status_code == 200:
 
@@ -71,15 +70,17 @@ if response.status_code == 200:
                     teacher = div.find("div", class_="teacher")
                     room = div.find("span", class_="room")
                     group = div.find('div')
+                    classes = var.find_all("div")[2]
 
-                    update_result(day, hour, my_group, subject, teacher, room, group)
+                    update_result(classes, day, hour, my_group, subject, teacher, room, group)
             else:
                 subject = var.find("div", class_="subject")
                 teacher = var.find("div", class_="teacher")
                 room = var.find("span", class_="room")
                 group = var.find("div")
+                classes = var.find_all("div")[2]
 
-                update_result(day, hour, my_group, subject, teacher, room, group)
+                update_result(classes, day, hour, my_group, subject, teacher, room, group)
 
     # print(result)
 
