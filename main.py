@@ -6,7 +6,7 @@ from EnglishRooms import EnglishRooms
 def get_group(soup):
     return soup.find('h1').text.split()[2]
 
-def update_result(my_group, subject, teacher, room, group, skip_vubirkovi = True):
+def update_result(day, hour, my_group, subject, teacher, room, group, skip_vubirkovi = True):
 
     if subject and teacher and room:
         if 'Вибіркові дисципліни' not in subject.text and skip_vubirkovi:
@@ -15,28 +15,34 @@ def update_result(my_group, subject, teacher, room, group, skip_vubirkovi = True
             teacher = teacher.text
             room = ' '.join(room.text.split())
 
+
             if group:
                 group = group.text
                 if group == '':
                     group = my_group
 
-
             if subject == 'Іноземна мова':
-                pass
-
+                englishId = englishRooms[day][hour]['teacher'].index(englishTeacher)
+                teacher = englishRooms[day][hour]['teacher'][englishId]
+                room = englishRooms[day][hour]['room'][englishId]
+                group = my_group
 
             if not hour in result[day]:
-                print(f'if {result}')
+                # print(f'if {result}')
                 result[day].update({hour: [{'subject': subject, 'teacher': teacher, 'room': room, 'group': group}]})
             else:
-                print(f'else {result}')
+                # print(f'else {result}')
                 result[day][hour].append({'subject': subject, 'teacher': teacher, 'room': room, 'group': group})
 
-englishRooms = EnglishRooms('english.xlsx')
-englishRooms.print_json()
+
+
+englishRooms = EnglishRooms('english.xlsx').result
+print(englishRooms)
 
 ipz235 = 'https://rozklad.ztu.edu.ua/schedule/group/ІПЗ-23-5'
 vt242 = 'https://rozklad.ztu.edu.ua/schedule/group/ВТ-24-2'
+
+englishTeacher = 'Вергун Тетяна Михайлівна'
 
 response = requests.get(ipz235)
 
@@ -53,7 +59,7 @@ if response.status_code == 200:
         hour = td.get('hour')
 
         if day not in result:
-            print(f'{day} not in {result}')
+            # print(f'{day} not in {result}')
             result[day] = {}
 
         var = td.find('div', class_='variative')
@@ -66,16 +72,16 @@ if response.status_code == 200:
                     room = div.find("span", class_="room")
                     group = div.find('div')
 
-                    update_result(my_group, subject, teacher, room, group)
+                    update_result(day, hour, my_group, subject, teacher, room, group)
             else:
                 subject = var.find("div", class_="subject")
                 teacher = var.find("div", class_="teacher")
                 room = var.find("span", class_="room")
                 group = var.find("div")
 
-                update_result(my_group, subject, teacher, room, group)
+                update_result(day, hour, my_group, subject, teacher, room, group)
 
-    print(result)
+    # print(result)
 
     with open("data.json", "w", encoding='utf-8') as file:
         json.dump(result, file, ensure_ascii=False, indent=4)
