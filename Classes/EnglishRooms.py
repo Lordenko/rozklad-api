@@ -1,6 +1,6 @@
+from Classes.BuilderJSON import BuilderJSON
 from datetime import datetime, timedelta
 import pandas as pd
-import json
 
 class EnglishRooms:
     result = {}
@@ -11,7 +11,7 @@ class EnglishRooms:
         self.__pd = pd.read_excel(path, header=1, sheet_name=None)
         self.__global_fix()
 
-        self.get_json()
+        BuilderJSON(self.result).get('english')
 
     def __global_fix(self):
         for key, value in self.__pd.items():
@@ -63,7 +63,6 @@ class EnglishRooms:
     def __fix_roman(self, key):
         key_name = key[0:-3].replace('ІІ', '2').replace('І', '1')
         self.result[key_name] = {}
-        print(self.result)
         return key_name
 
     def __global_filter(self, dict):
@@ -121,13 +120,3 @@ class EnglishRooms:
     def __check_last_and_pre_last_element_filter(dict, key):
         if not isinstance(dict[key][-1], list) and not isinstance(dict[key][-2], list):
             dict[key][-1] = ['']
-
-
-
-
-
-    # will be fixed in issue2 :)
-
-    def get_json(self):
-        with open("jsons/english.json", "w", encoding='utf-8') as file:
-            json.dump(self.result, file, ensure_ascii=False, indent=4)
