@@ -15,6 +15,7 @@ class RozkladAPI:
         self.__response = requests.get(url)
         self.__englishTeacher = englishTeacher
         self.__englishRooms = EnglishRooms('EnglishXLSX/english.xlsx').result
+        print(self.__englishRooms)
 
         self.__start_response()
 
