@@ -1,7 +1,7 @@
-import json
+from Classes.EnglishRooms import EnglishRooms
+from Classes.BuilderJSON import BuilderJSON
 import requests
 from bs4 import BeautifulSoup
-from Classes.EnglishRooms import EnglishRooms
 
 class RozkladAPI:
 
@@ -15,9 +15,9 @@ class RozkladAPI:
         self.__response = requests.get(url)
         self.__englishTeacher = englishTeacher
         self.__englishRooms = EnglishRooms('EnglishXLSX/english.xlsx').result
-        print(self.__englishRooms)
 
         self.__start_response()
+        BuilderJSON(self.__result).get('rozklad')
 
     def __get_validate(self, tag, day, hour):
         validate = {
@@ -101,10 +101,3 @@ class RozkladAPI:
 
         else:
             raise Exception(f"Не вдалося отримати сторінку. Код: {self.__response.status_code}")
-
-    def get_json(self):
-        print(self.__result)
-        with open("jsons/rozklad.json", "w", encoding='utf-8') as file:
-            json.dump(self.__result, file, ensure_ascii=False, indent=4)
-
-
