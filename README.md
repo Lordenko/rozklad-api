@@ -3,9 +3,6 @@
 ### 🛠 In Progress
 - **Include links for remote classes in JSON**
 
-### 🚀 Planned Features
-1. **Enhance the `room` field in JSON when it contains multiple groups for better readability**
-
 ### ✅ Completed
 - **Structure project**
 - **Add OOP**
