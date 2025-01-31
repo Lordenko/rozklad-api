@@ -1,22 +1,21 @@
 from Classes.EnglishRooms import EnglishRooms
 from Classes.BuilderJSON import BuilderJSON
-import requests
-from bs4 import BeautifulSoup
+from Classes.Responser import Responser
 
 class RozkladAPI:
 
     __result = {}
-    __group_name = None
-    __englishRooms = None
     __englishTeacher = None
+    __englishRooms = EnglishRooms('EnglishXLSX/english.xlsx').result
 
     def __init__(self, url, englishTeacher):
         self.__url = url
-        self.__response = requests.get(url)
         self.__englishTeacher = englishTeacher
-        self.__englishRooms = EnglishRooms('EnglishXLSX/english.xlsx').result
 
-        self.__start_response()
+        self.__soup = Responser(self.__url).get_soup()
+        self.__group_name = self.__get_group(self.__soup)
+        self.__extract_data(self.__soup)
+
         BuilderJSON(self.__result).get('rozklad')
 
     def __get_validate(self, tag, day, hour):
@@ -69,35 +68,24 @@ class RozkladAPI:
         return soup.find('h1').text.split()[2]
 
 
+    def __check_day_in_result(self, day):
+        if day not in self.__result:
+            self.__result[day] = {}
 
-
-    # will be fixed in issue2 and issue3 :)
-
-
-    def __parsing(self, soup):
+    def __extract_data(self, soup):
         for td in soup.find_all("td"):
             day = td.get('day')
             hour = td.get('hour')
 
-            if day not in self.__result:
-                self.__result[day] = {}
+            self.__check_day_in_result(td.get('day'))
 
             var = td.find('div', class_='variative')
-            if var:
-                subgroups = td.find('div', class_='subgroups')
-                if subgroups:
-                    for div in subgroups.find_all('div', class_='one'):
-                        self.__update_result(self.__get_validate(div, day, hour))
-                else:
-                    self.__update_result(self.__get_validate(var, day, hour))
+            subgroups = td.find('div', class_='subgroups')
 
+            if not var:
+                continue
 
-    def __start_response(self):
-        if self.__response.status_code == 200:
-            soup = BeautifulSoup(self.__response.text, "lxml")
+            div = subgroups.find_all('div', class_='one') if subgroups else [var]
 
-            self.__group_name = self.__get_group(soup)
-            self.__parsing(soup)
-
-        else:
-            raise Exception(f"Не вдалося отримати сторінку. Код: {self.__response.status_code}")
+            for item in div:
+                self.__update_result(self.__get_validate(item, day, hour))

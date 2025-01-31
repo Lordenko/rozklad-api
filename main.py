@@ -1,10 +1,10 @@
 from Classes.RozkladAPI import RozkladAPI
+from configs import config
 
 def main():
-    url = 'https://rozklad.ztu.edu.ua/schedule/group/ІПЗ-23-5'
-    englishTeacher = 'Вергун Тетяна Михайлівна'
 
-    RozkladAPI(url, englishTeacher)
+    url = f'https://rozklad.ztu.edu.ua/schedule/group/{config.group}'
+    RozkladAPI(url, config.english_teacher)
 
 if __name__ == '__main__':
     main()
