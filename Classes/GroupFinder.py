@@ -17,5 +17,9 @@ class GroupFinder:
     def find(self, name_group):
         if CheckFiles.check(f'{export_directory}{self.__json_name}.json'):
             self.__get_groups()
+            print(f'File {export_directory}{self.__json_name}.json recreate')
 
-        return BuilderJSON.get(self.__json_name)[name_group]
+        try:
+            return BuilderJSON.get(self.__json_name)[name_group]
+        except KeyError:
+            raise Exception(f'Group {name_group} not found')

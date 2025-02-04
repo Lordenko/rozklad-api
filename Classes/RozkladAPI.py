@@ -34,7 +34,7 @@ class RozkladAPI:
                 validate['room'] = self.__englishRooms[validate['day']][validate['hour']]['room'][englishId]
                 validate['group'] = self.__group_name
             except ValueError:
-                print('Вказаного викладача іноземної мови не було знайдено')
+                raise Exception('Вказаного викладача іноземної мови не було знайдено')
 
     def __update_result(self, validate, skip_selective = True):
         if validate and 'Вибіркові дисципліни' not in validate['subject'] and skip_selective:
@@ -54,7 +54,7 @@ class RozkladAPI:
         validate = {
             'day': day,
             'hour': hour,
-            'group': ', '.join([group.text.strip() for group in tag.find('div', class_='flow-groups').find_all('a')]),
+            'group': ', '.join([group.text.strip() for group in tag.find('div', class_='flow-groups').find_all('a')]) if tag.find('div', class_='flow-groups') else None,
             'classes': tag.find('div', class_='activity-tag').text.strip(),
             'subject': tag.find('div', class_='subject').text.strip(),
             'room': tag.find('div', class_='room').find('span').text.strip(),
@@ -79,10 +79,7 @@ class RozkladAPI:
 
         return f'{DAYS_OF_WEEK[day]} {week_number}'
 
-
     def __extract_data(self, soup):
-
-
         for wrapper in soup.find_all('div', class_='wrapper'):
             week_number = wrapper.find('h2').text.strip()[-1]
 

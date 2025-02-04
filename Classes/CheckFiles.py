@@ -13,4 +13,4 @@ class CheckFiles:
 
             return last_modified_date < one_day_ago
         else:
-            print("File does not exist!")
+            raise Exception("File does not exist!")
