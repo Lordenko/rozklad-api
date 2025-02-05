@@ -1,9 +1,12 @@
 from Classes.EnglishRooms import EnglishRooms
 from Classes.EditorJSON import BuilderJSON
 from Classes.Responser import Responser
+from Classes.CheckFiles import CheckFiles
+from configs.config import export_directory
 
 class RozkladAPI:
 
+    __json_name = 'rozklad'
     __result = {}
     __englishTeacher = None
     __englishRooms = EnglishRooms('EnglishXLSX/english.xlsx').result
@@ -13,10 +16,10 @@ class RozkladAPI:
         self.__englishTeacher = englishTeacher
 
         self.__soup = Responser(self.__url).get_soup()
-        self.__group_name = self.__get_group(self.__soup)
-        self.__extract_data(self.__soup)
+        if CheckFiles.check(f'{export_directory}{self.__json_name}.json'):
+            self.__extract_data(self.__soup)
+            print(f'File {export_directory}{self.__json_name}.json recreate')
 
-        BuilderJSON.create(self.__result, 'rozklad')
 
     def __check_validate(self, validate):
         self.__check_group(validate)
@@ -80,6 +83,9 @@ class RozkladAPI:
         return f'{DAYS_OF_WEEK[day]} {week_number}'
 
     def __extract_data(self, soup):
+
+        self.__group_name = self.__get_group(self.__soup)
+
         for wrapper in soup.find_all('div', class_='wrapper'):
             week_number = wrapper.find('h2').text.strip()[-1]
 
@@ -92,3 +98,5 @@ class RozkladAPI:
                     for pair in td.find_all('div', class_='pair'):
                         if pair:
                             self.__update_result(self.__get_validate(pair, self.__get_day_of_week(td_key, week_number), hour))
+
+        BuilderJSON.create(self.__result, self.__json_name)

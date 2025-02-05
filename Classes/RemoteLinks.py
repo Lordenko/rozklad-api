@@ -1,5 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+import os
+
+load_dotenv('../configs/login.env')
+login = os.getenv("LOGIN")
+password = os.getenv("PASSWORD")
 
 login_url = "https://cabinet.ztu.edu.ua/site/login"
 schedule_url = "https://cabinet.ztu.edu.ua/site/schedule"
@@ -13,8 +19,8 @@ soup = BeautifulSoup(response.text, 'html.parser')
 csrf_token = soup.find("input", {"name": "_csrf-frontend"}).get("value")
 
 payload = {
-    "LoginForm[username]": "1",
-    "LoginForm[password]": "1",
+    "LoginForm[username]": login,
+    "LoginForm[password]": password,
     "_csrf-frontend": csrf_token
 }
 
