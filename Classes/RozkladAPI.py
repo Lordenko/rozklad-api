@@ -15,7 +15,8 @@ class RozkladAPI:
         self.__url = url
         self.__englishTeacher = englishTeacher
 
-        self.__soup = Responser(self.__url).get_soup()
+        self.__soup = Responser.get_soup(self.__url, 'rozklad.ztu.edu.ua', 'huy')
+
         if CheckFiles.check(f'{export_directory}{self.__json_name}.json'):
             self.__extract_data(self.__soup)
             print(f'File {export_directory}{self.__json_name}.json recreate')
