@@ -1,9 +1,12 @@
 from Classes.EnglishRooms import EnglishRooms
-from Classes.BuilderJSON import BuilderJSON
+from Classes.EditorJSON import BuilderJSON
 from Classes.Responser import Responser
+from Classes.CheckFiles import CheckFiles
+from configs.config import export_directory
 
 class RozkladAPI:
 
+    __json_name = 'rozklad'
     __result = {}
     __englishTeacher = None
     __englishRooms = EnglishRooms('EnglishXLSX/english.xlsx').result
@@ -13,35 +16,14 @@ class RozkladAPI:
         self.__englishTeacher = englishTeacher
 
         self.__soup = Responser(self.__url).get_soup()
-        self.__group_name = self.__get_group(self.__soup)
-        self.__extract_data(self.__soup)
+        if CheckFiles.check(f'{export_directory}{self.__json_name}.json'):
+            self.__extract_data(self.__soup)
+            print(f'File {export_directory}{self.__json_name}.json recreate')
 
-        BuilderJSON(self.__result).get('rozklad')
-
-    def __get_validate(self, tag, day, hour):
-        validate = {
-            'day': day,
-            'hour': hour,
-            'subject': tag.find("div", class_="subject").text if tag.find("div", class_="subject") else None,
-            'teacher': tag.find("div", class_="teacher").text if tag.find("div", class_="teacher") else None,
-            'room': ' '.join(tag.find("span", class_="room").text.split()) if tag.find("span", class_="room") else None,
-            'group': tag.find('div').text if tag.find("div") else None,
-        }
-
-        self.__add_classes(validate, tag)
-        self.__check_validate(validate)
-
-        return validate if all(validate.values()) else None
-
-    @staticmethod
-    def __add_classes(validate, tag):
-        if all(validate.values()):
-            validate['classes'] = tag.find_all("div")[2].text.split()[0][0:-5] if tag.find_all("div")[2].text.split()[0][0:-5] == 'Практика' or tag.find_all("div")[2].text.split()[0][0:-5] == 'Лекція' else 'Практика'
 
     def __check_validate(self, validate):
-        if all(validate.values()):
-            self.__check_group(validate)
-            self.__english_check(validate)
+        self.__check_group(validate)
+        self.__english_check(validate)
 
     def __check_group(self, validate):
         if not validate['group']:
@@ -55,7 +37,7 @@ class RozkladAPI:
                 validate['room'] = self.__englishRooms[validate['day']][validate['hour']]['room'][englishId]
                 validate['group'] = self.__group_name
             except ValueError:
-                print('Вказаного викладача іноземної мови не було знайдено')
+                raise Exception('Вказаного викладача іноземної мови не було знайдено')
 
     def __update_result(self, validate, skip_selective = True):
         if validate and 'Вибіркові дисципліни' not in validate['subject'] and skip_selective:
@@ -67,25 +49,54 @@ class RozkladAPI:
     def __get_group(self, soup):
         return soup.find('h1').text.split()[2]
 
-
     def __check_day_in_result(self, day):
         if day not in self.__result:
             self.__result[day] = {}
 
+    def __get_validate(self, tag, day, hour):
+        validate = {
+            'day': day,
+            'hour': hour,
+            'group': ', '.join([group.text.strip() for group in tag.find('div', class_='flow-groups').find_all('a')]) if tag.find('div', class_='flow-groups') else None,
+            'classes': tag.find('div', class_='activity-tag').text.strip(),
+            'subject': tag.find('div', class_='subject').text.strip(),
+            'room': tag.find('div', class_='room').find('span').text.strip(),
+            'teacher': tag.find('div', class_='teacher').find('a').text.strip(),
+        }
+
+        self.__check_validate(validate)
+
+        return validate
+
+    @staticmethod
+    def __get_day_of_week(day, week_number):
+        DAYS_OF_WEEK = {
+            0: 'Понеділок',
+            1: 'Вівторок',
+            2: 'Середа',
+            3: 'Четвер',
+            4: 'П\'ятниця',
+            5: 'Субота',
+            6: 'Неділя'
+        }
+
+        return f'{DAYS_OF_WEEK[day]} {week_number}'
+
     def __extract_data(self, soup):
-        for td in soup.find_all("td"):
-            day = td.get('day')
-            hour = td.get('hour')
 
-            self.__check_day_in_result(td.get('day'))
+        self.__group_name = self.__get_group(self.__soup)
 
-            var = td.find('div', class_='variative')
-            subgroups = td.find('div', class_='subgroups')
+        for wrapper in soup.find_all('div', class_='wrapper'):
+            week_number = wrapper.find('h2').text.strip()[-1]
 
-            if not var:
-                continue
+            for tr in wrapper.find_all('tr')[1::]:
+                hour = tr.find('th', class_='hour-name').find('div', class_='full-name').text
 
-            div = subgroups.find_all('div', class_='one') if subgroups else [var]
+                for td_key, td in enumerate(tr.find_all('td')):
+                    self.__check_day_in_result(self.__get_day_of_week(td_key, week_number))
 
-            for item in div:
-                self.__update_result(self.__get_validate(item, day, hour))
+                    for pair in td.find_all('div', class_='pair'):
+                        if pair:
+                            self.__update_result(self.__get_validate(pair, self.__get_day_of_week(td_key, week_number), hour))
+
+        BuilderJSON.create(self.__result, self.__json_name)
