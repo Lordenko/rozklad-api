@@ -5,7 +5,7 @@ from configs.config import rozklad_list, rozklad_domen, export_directory
 
 class GroupFinder:
     __json_name = 'group_links'
-    __soup = Responser(rozklad_list).get_soup()
+    __soup = Responser.get_soup(rozklad_list)
     __dictionary = {}
 
     def __get_groups(self):

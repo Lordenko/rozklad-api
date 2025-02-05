@@ -2,11 +2,16 @@ import requests
 from bs4 import BeautifulSoup
 
 class Responser:
-    def __init__(self, url):
-        self.url = url
+    @staticmethod
+    def get_soup(url, domain = None, token = None):
 
-    def get_soup(self):
-        request = requests.get(self.url)
+        session = requests.Session()
+
+        if token and domain:
+            session.cookies.set('PHPSESSID', token, domain=domain)
+
+        request = session.get(url)
+
         if request.status_code == 200:
             return BeautifulSoup(request.text, "lxml")
         else:
