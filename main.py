@@ -1,10 +1,12 @@
 from Classes.RozkladAPI import RozkladAPI
-from configs import config
+from Classes.GroupFinder import GroupFinder
+from configs.config import group, english_teacher
 
 def main():
 
-    url = f'https://rozklad.ztu.edu.ua/schedule/group/{config.group}'
-    RozkladAPI(url, config.english_teacher)
+    url = GroupFinder().find(group)
+
+    RozkladAPI(url, english_teacher)
 
 if __name__ == '__main__':
     main()

@@ -1,4 +1,4 @@
-from Classes.BuilderJSON import BuilderJSON
+from Classes.EditorJSON import BuilderJSON
 from datetime import datetime, timedelta
 import pandas as pd
 
@@ -11,7 +11,7 @@ class EnglishRooms:
         self.__pd = pd.read_excel(path, header=1, sheet_name=None)
         self.__global_fix()
 
-        BuilderJSON(self.result).get('english')
+        BuilderJSON.create(self.result, 'english')
 
     def __global_fix(self):
         for key, value in self.__pd.items():
