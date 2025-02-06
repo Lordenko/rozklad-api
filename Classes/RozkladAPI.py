@@ -1,7 +1,7 @@
 from Classes.EnglishRooms import EnglishRooms
 from Classes.EditorJSON import BuilderJSON
 from Classes.Responser import Responser
-from Classes.CheckFiles import CheckFiles
+from Classes.FileManager import FileManager
 from configs.config import export_directory
 
 class RozkladAPI:
@@ -17,7 +17,7 @@ class RozkladAPI:
 
         self.__soup = Responser.get_soup(self.__url, 'rozklad.ztu.edu.ua', 'huy')
 
-        if CheckFiles.check(f'{export_directory}{self.__json_name}.json'):
+        if FileManager.check_time(f'{export_directory}{self.__json_name}.json'):
             self.__extract_data(self.__soup)
             print(f'File {export_directory}{self.__json_name}.json recreate')
 
@@ -40,8 +40,8 @@ class RozkladAPI:
             except ValueError:
                 raise Exception('Вказаного викладача іноземної мови не було знайдено')
 
-    def __update_result(self, validate, skip_selective = True):
-        if validate and 'Вибіркові дисципліни' not in validate['subject'] and skip_selective:
+    def __update_result(self, validate):
+        if validate and 'Вибіркові дисципліни' not in validate['subject']:
 
             self.__result[validate['day']].setdefault(validate['hour'], []).append(
                 {'subject': validate['subject'], 'teacher': validate['teacher'], 'room': validate['room'], 'group': validate['group'], 'classes': validate['classes']}

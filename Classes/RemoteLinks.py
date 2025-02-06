@@ -13,6 +13,9 @@ schedule_url = "https://cabinet.ztu.edu.ua/site/schedule"
 session = requests.Session()
 
 response = session.get(login_url)
+session.cookies.set('advanced-frontend', '8v8jjqh9snk98j16m9lkmt8tei', domain='cabinet.ztu.edu.ua')
+
+
 
 soup = BeautifulSoup(response.text, 'html.parser')
 

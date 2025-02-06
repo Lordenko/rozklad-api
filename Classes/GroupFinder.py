@@ -1,6 +1,6 @@
 from Classes.EditorJSON import BuilderJSON
 from Classes.Responser import Responser
-from Classes.CheckFiles import CheckFiles
+from Classes.FileManager import FileManager
 from configs.config import rozklad_list, rozklad_domen, export_directory
 
 class GroupFinder:
@@ -15,7 +15,7 @@ class GroupFinder:
         BuilderJSON.create(self.__dictionary, self.__json_name)
 
     def find(self, name_group):
-        if CheckFiles.check(f'{export_directory}{self.__json_name}.json'):
+        if FileManager.check_time(f'{export_directory}{self.__json_name}.json'):
             self.__get_groups()
             print(f'File {export_directory}{self.__json_name}.json recreate')
 
