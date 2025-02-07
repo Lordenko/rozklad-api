@@ -1,0 +1,45 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-sizing: border-box;
+    font-family: Inter, sans-serif;
+    line-height: 1.6;
+}
+
+body {
+    background-color: rgb(24, 24, 24);
+    color: rgb(255, 255, 255);
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+main {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.rozklad-container {
+    width: 100%;
+    max-width: 900px;
+    padding: 0 10px;
+    /* margin: 0 auto; */
+}
+
+.navdays {
+    
+}
+
+.phaircard {
+    width: 100%;
+    background-color: rgb(36, 36, 39);
+    /* border: 1px solid rgb(255, 255, 255); */
+    border-radius: 10px;
+    padding: 5px 10px;
+    margin: 15px 0px 15px 0px;
+
+
+
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Rozkladztu</title>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="navdays">
+                <div class="curday_div">Понеділок</div>
+                <div class="curday_div">Вівторок</div>
+                <div class="curday_div">Середа</div>
+                <div class="curday_div">Четвер</div>
+                <div class="curday_div">П'ятниця</div>
+                <div class="curday_div">Субота</div>
+                <div class="curday_div">Все</div>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <ul class="rozklad-container">
+
+        </ul>
+    </main>
+    <footer></footer>
+
+
+    <script>
+        const rozklad_container = document.querySelector(".rozklad-container");
+        const curday = ['Понеділок','Вівторок','Середа','Четвер','П\'ятниця','Субота','Все'];
+        let rozclad_week_group = [];
+
+        class Phaircards {
+            constructor(_week, _day, _time, _subject, _teacher, _room, _group, _classes) {
+                this.week = _week;
+                this.day = _day;
+                this.time = _time;
+                this.subject = _subject;
+                this.teacher = _teacher;
+                this.room = _room;
+                this.group = _group;
+                this.classes = _classes;
+            }
+
+            create_div() {
+                let card = document.createElement("div");
+                card.classList.add("phaircard");
+                card.innerHTML = `
+                <div class="week">
+                    <p>${this.week}</p>
+                </div>
+                <div class="day">
+                    <p>${this.day}</p>
+                </div>
+                <div class="time">
+                    <p>${this.time}</p>
+                </div>
+                <div class="subject">
+                    <p>${this.subject}</p>
+                </div>
+                <div class="teacher">
+                    <p>${this.teacher}</p>
+                </div>
+                <div class="room">
+                    <p>${this.room}</p>
+                </div>
+                <div class="group">
+                    <p>${this.group}</p>
+                </div>
+                <div class="classes">
+                    <p>${this.classes}</p>
+                </div>
+                `
+                return card
+            }
+
+
+        }
+
+        function createroz(day) {
+            rozklad_container.innerHTML = '';
+            rozclad_week_group.forEach(item => {
+                if (item.day != "Понеділок") {
+                    return
+                }
+                rozklad_container.appendChild(item.create_div());
+            })
+        }
+
+        function slisePhairs(data) {
+            Object.entries(data).forEach(([day, phair]) => {
+                console.log(`День - ${day}`);
+                dayweek = day.split(" ");
+                day = dayweek[0];
+                week = dayweek[1];
+
+                // Прописуємо День
+                //let title_day = document.createElement("h2");
+                //title_day.textContent = day
+                //rozklad_container.appendChild(title_day);
+
+                const phaircard = new Phaircards()
+
+                Object.entries(phair).forEach(([time, lessons]) => {
+                    lessons.forEach(subjects => {
+                        // console.log(`Час - ${time}`);
+
+                        // Прописуємо пару
+                        
+                        // console.log(`------------------------------------`);
+                        let subject = subjects["subject"];
+                        let teacher = subjects["teacher"];
+                        let room = subjects["room"];
+                        let group = subjects["group"];
+                        let classes = subjects["classes"];
+
+                        const phaircard = new Phaircards(week, day, time, subject, teacher, room, group, classes);
+                        rozclad_week_group.push(phaircard);
+                    })
+                })
+            });
+        }
+
+        // Визов парсинго пайтона
+        function runparser() {
+            fetch("/api/run_parser")
+                .then(Response => Response.json())
+                .then(data => {
+                    console.log(`Розклад отриман - ${data}`);
+                    loadrozklad();
+                });
+        }
+
+        function loadrozklad() {
+            fetch("/api/data")
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Отримані дані:", data);
+                    if (typeof data !== "object") { // Перевіряємо, що це об'єкт
+                        console.error("Помилка: дані мають бути об'єктом!");
+                        return;
+                    }
+                    slisePhairs(data)
+                    createroz()
+                })
+                .catch(error => console.error("Помилка:", error));
+        }
+
+
+
+        runparser();
+    </script>
+    <script src="script.js"></script>
+</body>
+
+</html>
