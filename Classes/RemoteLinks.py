@@ -13,9 +13,10 @@ schedule_url = "https://cabinet.ztu.edu.ua/site/schedule"
 session = requests.Session()
 
 response = session.get(login_url)
-session.cookies.set('advanced-frontend', '8v8jjqh9snk98j16m9lkmt8tei', domain='cabinet.ztu.edu.ua')
 
+# session.cookies.set('advanced-frontend', '8v8jjqh9snk98j16m9lkmt8tei', domain='cabinet.ztu.edu.ua')
 
+# print(session.cookies.get('advanced-frontend'))
 
 soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -33,6 +34,7 @@ if login_response.status_code == 200 and "logout" in login_response.text.lower()
     print("Login successful!")
 else:
     print("Login failed!")
+
 
 schedule_response = session.get(schedule_url)
 
