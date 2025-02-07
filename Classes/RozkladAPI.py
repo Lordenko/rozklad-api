@@ -2,7 +2,7 @@ from Classes.EnglishRooms import EnglishRooms
 from Classes.EditorJSON import BuilderJSON
 from Classes.Responser import Responser
 from Classes.FileManager import FileManager
-from configs.config import export_directory
+from configs.config import export_directory, selective_subject
 
 class RozkladAPI:
 
@@ -54,13 +54,23 @@ class RozkladAPI:
         if day not in self.__result:
             self.__result[day] = {}
 
+    @staticmethod
+    def __get_subject(tag):
+        return tag.find('div', class_='subject').text.strip()
+
     def __get_validate(self, tag, day, hour):
+
+        classes = self.__get_subject(tag)
+
+
+
+
         validate = {
             'day': day,
             'hour': hour,
             'group': ', '.join([group.text.strip() for group in tag.find('div', class_='flow-groups').find_all('a')]) if tag.find('div', class_='flow-groups') else None,
             'classes': tag.find('div', class_='activity-tag').text.strip(),
-            'subject': tag.find('div', class_='subject').text.strip(),
+            'subject': classes,
             'room': tag.find('div', class_='room').find('span').text.strip(),
             'teacher': tag.find('div', class_='teacher').find('a').text.strip(),
         }
@@ -96,7 +106,12 @@ class RozkladAPI:
                 for td_key, td in enumerate(tr.find_all('td')):
                     self.__check_day_in_result(self.__get_day_of_week(td_key, week_number))
 
-                    for pair in td.find_all('div', class_='pair'):
+                    pairs = td.find_all('div', class_='pair')
+                    for pair in pairs:
+                        if len(pairs) > 2:
+                            if self.__get_subject(pair) not in selective_subject:
+                                continue
+
                         if pair:
                             self.__update_result(self.__get_validate(pair, self.__get_day_of_week(td_key, week_number), hour))
 
