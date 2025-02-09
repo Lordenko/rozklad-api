@@ -4,6 +4,23 @@ from Classes.Responser import Responser
 from Classes.FileManager import FileManager
 from configs.config import export_directory
 
+from dataclasses import dataclass, asdict
+
+
+@dataclass
+class ScheduleEntry:
+    group: str | None
+    classes: int
+    subject: str
+    room: str
+    teacher: str
+                
+    def is_elective(self):
+        return 'Вибіркові дисципліни' in self.subject
+    
+    def is_english(self):
+        return self.subject == 'Іноземна мова' and len(self.teacher.split()) > 3
+
 class RozkladAPI:
 
     __json_name = 'rozklad'
@@ -22,30 +39,27 @@ class RozkladAPI:
             print(f'File {export_directory}{self.__json_name}.json recreate')
 
 
-    def __check_validate(self, validate):
-        self.__check_group(validate)
-        self.__english_check(validate)
+    def __fixup_entry(self, entry: ScheduleEntry, day, hour):
+        self.__fixup_entry_group(entry)
+        self.__fixup_entry_english(entry, day, hour)
 
-    def __check_group(self, validate):
-        if not validate['group']:
-            validate['group'] = self.__group_name
+    def __fixup_entry_group(self, entry: ScheduleEntry):
+        if not entry.group:
+            entry.group = self.__group_name
 
-    def __english_check(self, validate):
-        if validate['subject'] == 'Іноземна мова' and len(validate['teacher'].split()) > 3:
+    def __fixup_entry_english(self, entry: ScheduleEntry, day, hour):
+        if entry.is_english():
             try:
-                englishId = self.__englishRooms[validate['day']][validate['hour']]['teacher'].index(self.__englishTeacher)
-                validate['teacher'] = self.__englishRooms[validate['day']][validate['hour']]['teacher'][englishId]
-                validate['room'] = self.__englishRooms[validate['day']][validate['hour']]['room'][englishId]
-                validate['group'] = self.__group_name
+                englishId = self.__englishRooms[day][hour]['teacher'].index(self.__englishTeacher)
+                entry.teacher = self.__englishRooms[day][hour]['teacher'][englishId]
+                entry.room = self.__englishRooms[day][hour]['room'][englishId]
+                entry.group = self.__group_name
             except ValueError:
                 raise Exception('Вказаного викладача іноземної мови не було знайдено')
 
-    def __update_result(self, validate):
-        if validate and 'Вибіркові дисципліни' not in validate['subject']:
-
-            self.__result[validate['day']].setdefault(validate['hour'], []).append(
-                {'subject': validate['subject'], 'teacher': validate['teacher'], 'room': validate['room'], 'group': validate['group'], 'classes': validate['classes']}
-            )
+    def __update_result(self, entry: ScheduleEntry, day, hour):
+        if not entry.is_elective():
+            self.__result[day].setdefault(hour, []).append(asdict(entry))
 
     def __get_group(self, soup):
         return soup.find('h1').text.split()[2]
@@ -54,20 +68,17 @@ class RozkladAPI:
         if day not in self.__result:
             self.__result[day] = {}
 
-    def __get_validate(self, tag, day, hour):
-        validate = {
-            'day': day,
-            'hour': hour,
-            'group': ', '.join([group.text.strip() for group in tag.find('div', class_='flow-groups').find_all('a')]) if tag.find('div', class_='flow-groups') else None,
-            'classes': tag.find('div', class_='activity-tag').text.strip(),
-            'subject': tag.find('div', class_='subject').text.strip(),
-            'room': tag.find('div', class_='room').find('span').text.strip(),
-            'teacher': tag.find('div', class_='teacher').find('a').text.strip(),
-        }
+    def __get_schedule_entry(self, tag):
+        group = None
+        if tag.find('div', class_='flow-groups'):
+            group_tags = tag.find('div', class_='flow-groups').find_all('a')
+            group = ', '.join([group.text.strip() for group in group_tags])
+        classes = tag.find('div', class_='activity-tag').text.strip()
+        subject = tag.find('div', class_='subject').text.strip()
+        room = tag.find('div', class_='room').find('span').text.strip()
+        teacher = tag.find('div', class_='teacher').find('a').text.strip()
 
-        self.__check_validate(validate)
-
-        return validate
+        return ScheduleEntry(group, classes, subject, room, teacher)
 
     @staticmethod
     def __get_day_of_week(day, week_number):
@@ -98,6 +109,9 @@ class RozkladAPI:
 
                     for pair in td.find_all('div', class_='pair'):
                         if pair:
-                            self.__update_result(self.__get_validate(pair, self.__get_day_of_week(td_key, week_number), hour))
+                            day = self.__get_day_of_week(td_key, week_number)
+                            entry = self.__get_schedule_entry(pair)
+                            self.__fixup_entry(entry)
+                            self.__update_result(entry, day, hour)
 
         BuilderJSON.create(self.__result, self.__json_name)
