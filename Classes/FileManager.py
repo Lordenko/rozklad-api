@@ -19,7 +19,7 @@ class FileManager:
 
     @staticmethod
     def check_exist(path):
-        return True if os.path.exists(path) else False
+        return os.path.exists(path)
 
     @staticmethod
     def create_dir(path):
